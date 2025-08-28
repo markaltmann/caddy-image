@@ -1,0 +1,16 @@
+# syntax=docker/dockerfile:1.4
+
+FROM cgr.dev/chainguard/wolfi-base AS base
+
+ARG TARGETARCH
+
+COPY build/caddy-${TARGETARCH} /usr/bin/caddy
+
+RUN chmod +x /usr/bin/caddy
+
+EXPOSE 80 443
+
+USER 65532:65532
+
+ENTRYPOINT ["/usr/bin/caddy"]
+CMD ["run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
