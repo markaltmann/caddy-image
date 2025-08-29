@@ -1,0 +1,70 @@
+name: Check External References
+on:
+  schedule:
+    - cron: "0 7 * * *" # Täglich um 7 Uhr UTC
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
+
+      - name: Get latest go dependencies commits
+        id: go
+        run: |
+          hash1=$(git ls-remote https://github.com/hslatman/caddy-crowdsec-bouncer.git main | cut -f1)
+          hash2=$(git ls-remote https://github.com/caddy-dns/inwx.git main | cut -f1)
+          echo "caddy-crowdsec-bouncer=$hash1" >> $GITHUB_OUTPUT
+          echo "caddy-dns-inwx=$hash2" >> $GITHUB_OUTPUT
+
+      - name: Get latest container image tag/digest with Podman
+        id: image
+        run: |
+          podman pull docker.io/caddy:builder
+          digest=$(podman inspect --format '{{.Digest}}' docker.io/caddy:builder)
+          echo "caddy-image=$digest" >> $GITHUB_OUTPUT
+
+      - name: Compare and update refs.txt if needed
+        id: update
+        run: |
+          file=refs.txt
+          changed=0
+
+          [ -f $file ] && . <(sed 's/-/_/g' $file)
+
+          #caddy-crowdsec-bouncer
+          if [ "$caddy-crowdsec-bouncer" != "${{ steps.go.outputs.caddy-crowdsec-bouncer }}" ]; then
+            sed -i "/^caddy-crowdsec-bouncer=/d" $file
+            echo "caddy-crowdsec-bouncer=${{ steps.go.outputs.go_commit_repo1 }}" >> $file
+            changed=1
+          fi
+
+          #caddy-dns-inwx
+          if [ "$caddy-dns-inwx" != "${{ steps.go.outputs.caddy-dns-inwx }}" ]; then
+            sed -i "/^caddy-dns-inwx=/d" $file
+            echo "caddy-dns-inwx=${{ steps.go.outputs.go_commit_repo2 }}" >> $file
+            changed=1
+          fi
+
+          #caddy-image
+          if [ "$caddy-image" != "${{ steps.image.outputs.caddy-image }}" ]; then
+            sed -i "/^container-image-tag=/d" $file
+            echo "caddy-image=${{ steps.image.outputs.caddy-image }}" >> $file
+            changed=1
+          fi
+
+          echo "changed=$changed" >> $GITHUB_OUTPUT
+
+      - name: Commit and push refs.txt
+        if: steps.update.outputs.changed == '1'
+        run: |
+          git config --global user.email "bot@altmann.it"
+          git config --global user.name "GitHub Actions Bot"
+          git add refs.txt
+          git commit -m "Update external references"
+          git push
