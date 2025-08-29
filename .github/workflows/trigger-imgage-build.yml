@@ -1,5 +1,6 @@
 name: Check External References
 on:
+  workflow_dispatch: # Manuelles Auslösen
   schedule:
     - cron: "0 7 * * *" # Täglich um 7 Uhr UTC
 

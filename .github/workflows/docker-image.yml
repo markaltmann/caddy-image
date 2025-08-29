@@ -1,10 +1,15 @@
 name: Build Multi-Arch Caddy Image
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
+    paths:
+      - refs.txt
   pull_request:
     branches: ["main"]
+    paths:
+      - refs.txt
 
 jobs:
   build-and-push:
