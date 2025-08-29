@@ -33,12 +33,15 @@ jobs:
       - name: Compare and update refs.txt if needed
         id: update
         run: |
-          file=refs.txt
-          changed=0
+          caddy_crowdsec_bouncer=""
+          caddy_dns_inwx=""
+          caddy_image=""
 
-          if [ -f "$file" ]; then
+          if [ -f refs.txt ]; then
+            file=refs.txt
             . <(sed 's/-/_/g' "$file")
           fi
+          changed=0
 
           #caddy-crowdsec-bouncer
           if [ "$caddy-crowdsec-bouncer" != "${{ steps.go.outputs.caddy-crowdsec-bouncer }}" ]; then
