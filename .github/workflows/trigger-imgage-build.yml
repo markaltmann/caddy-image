@@ -36,7 +36,9 @@ jobs:
           file=refs.txt
           changed=0
 
-          [ -f $file ] && . <(sed 's/-/_/g' $file)
+          if [ -f "$file" ]; then
+            . <(sed 's/-/_/g' "$file")
+          fi
 
           #caddy-crowdsec-bouncer
           if [ "$caddy-crowdsec-bouncer" != "${{ steps.go.outputs.caddy-crowdsec-bouncer }}" ]; then
