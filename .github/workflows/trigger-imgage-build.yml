@@ -68,9 +68,12 @@ jobs:
 
       - name: Commit and push refs.txt
         if: steps.update.outputs.changed == '1'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.email "bot@altmann.it"
           git config --global user.name "GitHub Actions Bot"
           git add refs.txt
           git commit -m "Update external references"
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git
           git push
