@@ -1,10 +1,16 @@
 # syntax=docker/dockerfile:1.4
+ARG VERSION=2
 
-FROM cgr.dev/chainguard/wolfi-base AS base
+FROM caddy:${VERSION}-builder AS builder
 
-ARG TARGETARCH
+RUN xcaddy build \
+    --with github.com/caddy-dns/inwx \
+    --with github.com/hslatman/caddy-crowdsec-bouncer/crowdsec
 
-COPY build/caddy-${TARGETARCH} /usr/bin/caddy
+FROM cgr.dev/chainguard/wolfi-base
+# FROM caddy:${VERSION} # Or use the standard Caddy version.
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
 RUN chmod +x /usr/bin/caddy
 

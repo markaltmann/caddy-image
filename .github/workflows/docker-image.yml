@@ -34,17 +34,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Caddy with xcaddy for linux/amd64 and linux/arm64
-        run: |
-          mkdir -p ./build
-          for ARCH in amd64 arm64; do
-            docker run --rm \
-              -e GOARCH=$ARCH \
-              -v $PWD/build:/output \
-              caddy:builder \
-              sh -c "xcaddy build --output /output/caddy-$ARCH --with github.com/caddy-dns/inwx --with github.com/hslatman/caddy-crowdsec-bouncer/crowdsec"
-          done
-
+      # Using Podman to do proper multiarch build in one Dockerfile
       - name: Build and push multi-arch image with Chainguard Wolfi
         uses: docker/build-push-action@v5
         with:

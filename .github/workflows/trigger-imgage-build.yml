@@ -33,9 +33,6 @@ jobs:
       - name: Compare and update refs.txt if needed
         id: update
         run: |
-          caddy_crowdsec_bouncer=""
-          caddy_dns_inwx=""
-          caddy_image=""
 
           if [ -f refs.txt ]; then
             file=refs.txt
