@@ -51,7 +51,7 @@ jobs:
           image: ghcr.io/${{ github.repository }}/caddy
           tags: latest
           containerfiles: ./Dockerfile.caddy
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64/v8
           oci: true
           push: true
           username: ${{ github.actor }}
