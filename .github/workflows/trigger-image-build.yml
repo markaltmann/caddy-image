@@ -41,28 +41,31 @@ jobs:
           fi
           changed=0
 
-          #caddy-crowdsec-bouncer
-          if [ "$caddy-crowdsec-bouncer" != "${{ steps.go.outputs.caddy-crowdsec-bouncer }}" ]; then
-            sed -i "/^caddy-crowdsec-bouncer=/d" $file
+          # Clean up and update caddy-crowdsec-bouncer
+          sed -i '/^caddy-crowdsec-bouncer=/d' $file
+          if [ -n "${{ steps.go.outputs.caddy-crowdsec-bouncer }}" ]; then
             echo "caddy-crowdsec-bouncer=${{ steps.go.outputs.caddy-crowdsec-bouncer }}" >> $file
             changed=1
           fi
 
-          #caddy-dns-inwx
-          if [ "$caddy-dns-inwx" != "${{ steps.go.outputs.caddy-dns-inwx }}" ]; then
-            sed -i "/^caddy-dns-inwx=/d" $file
+          # Clean up and update caddy-dns-inwx
+          sed -i '/^caddy-dns-inwx=/d' $file
+          if [ -n "${{ steps.go.outputs.caddy-dns-inwx }}" ]; then
             echo "caddy-dns-inwx=${{ steps.go.outputs.caddy-dns-inwx }}" >> $file
             changed=1
           fi
 
-          #caddy-image
-          if [ "$caddy-image" != "${{ steps.image.outputs.caddy-image }}" ]; then
-            sed -i "/^container-image-tag=/d" $file
+          # Clean up and update caddy-image
+          sed -i '/^caddy-image=/d' $file
+          if [ -n "${{ steps.image.outputs.caddy-image }}" ]; then
             echo "caddy-image=${{ steps.image.outputs.caddy-image }}" >> $file
             changed=1
           fi
 
           echo "changed=$changed" >> $GITHUB_OUTPUT
+
+          # Remove empty lines from refs.txt
+          sed -i '/^$/d' $file
 
       - name: Commit and push refs.txt
         if: steps.update.outputs.changed == '1'
