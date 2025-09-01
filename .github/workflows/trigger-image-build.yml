@@ -6,16 +6,11 @@ on:
 
 jobs:
   check-and-update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Enthält schon Podman vorinstalliert
     permissions:
       contents: write # Erforderlich zum Pushen von Änderungen
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Podman
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install podman
 
       - name: Get latest go dependencies versions
         id: go
@@ -29,11 +24,11 @@ jobs:
           echo "caddy-crowdsec-bouncer=$tag1" >> $GITHUB_OUTPUT
           echo "caddy-dns-inwx=$tag2" >> $GITHUB_OUTPUT
 
-      - name: Get latest container image version label with Podman
+      - name: Get latest container image version label with Podman # Does not work to get the labels. Check the command.
         id: image
         run: |
           podman pull docker.io/caddy:builder
-          version=$(podman inspect --format '{{ index .Labels "org.opencontainers.image.version" }}' docker.io/caddy:builder)
+          version=$(podman inspect --format '{{range .Config.Env}}{{if (eq (index (split . "=") 0) "CADDY_VERSION")}}{{index (split . "=") 1}}{{end}}{{end}}' docker.io/caddy:builder)
           echo "caddy-image=$version" >> $GITHUB_OUTPUT
 
       - name: Compare and update refs.txt if needed
@@ -78,5 +73,4 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git add refs.txt
           git commit -m "Update external references"
-          #git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git
           git push

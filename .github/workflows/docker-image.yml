@@ -3,11 +3,13 @@ name: Build Multi-Arch Caddy Image
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
+    branches:
+      - main
     paths:
       - refs.txt
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
     paths:
       - refs.txt
 
@@ -21,8 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Install qemu dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
 
       - name: Parse refs.txt for component versions
         id: refs
@@ -37,7 +41,7 @@ jobs:
           org.opencontainers.image.title=caddy
           org.opencontainers.image.description=Personal Caddy Container Image with INWX and Crowdsec modules included.
           org.opencontainers.image.url=ghcr.io/markaltmann/caddy-image/caddy:latest
-          org.opencontainers.image.source=https://github.com/markaltmann/caddy-imag
+          org.opencontainers.image.source=https://github.com/markaltmann/caddy-image
           org.opencontainers.image.version=${GITHUB_SHA}
           org.opencontainers.image.created=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           org.opencontainers.image.revision=${GITHUB_SHA}
