@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Parse refs.txt for component versions
         id: refs
         run: |
@@ -51,7 +54,7 @@ jobs:
           image: ghcr.io/${{ github.repository }}/caddy
           tags: latest
           containerfiles: ./Dockerfile.caddy
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: linux/amd64,linux/arm64
           oci: true
           push: true
           username: ${{ github.actor }}
