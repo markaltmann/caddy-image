@@ -33,33 +33,20 @@ jobs:
             echo "$key=$value" >> $GITHUB_ENV
           done < refs.txt
 
-      - name: Prepare OCI labels
-        run: |
-          cat <<EOF > labels.txt
-          org.opencontainers.image.title=caddy
-          org.opencontainers.image.description=Personal Caddy Container Image with INWX and Crowdsec modules included.
-          org.opencontainers.image.url=ghcr.io/markaltmann/caddy-image/caddy:latest
-          org.opencontainers.image.source=https://github.com/markaltmann/caddy-image
-          org.opencontainers.image.version=${GITHUB_SHA}
-          org.opencontainers.image.created=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          org.opencontainers.image.revision=${GITHUB_SHA}
-          org.opencontainers.image.licenses=The Unlicense
-          org.opencontainers.image.authors=Mark Altmann <mark@altmann.it>
-          org.opencontainers.image.component.caddy-crowdsec-bouncer=${{ env.caddy-crowdsec-bouncer }}
-          org.opencontainers.image.component.caddy-dns-inwx=${{ env.caddy-dns-inwx }}
-          org.opencontainers.image.component.caddy-image=${{ env.caddy-image }}
-          EOF
-
       - name: Build and push multi-arch image with Buildah
         uses: redhat-actions/buildah-build@v2
         with:
           image: ghcr.io/${{ github.repository }}/caddy
           tags: latest
           containerfiles: ./Dockerfile.caddy
-          archs: amd64, arm64
+          platforms: linux/amd64,linux/arm64
           oci: true
           push: true
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          labels: |
-            file:labels.txt
+          build-args: |
+            CADDY_IMAGE_VERSION=${{ env.caddy-image }}
+            BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            GITHUB_SHA=${{ github.sha }}
+            CADDY_CROWDSEC_BOUNCER_VERSION=${{ env.caddy-crowdsec-bouncer }}
+            CADDY_DNS_INWX_VERSION=${{ env.caddy-dns-inwx }}

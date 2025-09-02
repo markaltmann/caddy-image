@@ -10,6 +10,25 @@ RUN xcaddy build \
 FROM cgr.dev/chainguard/wolfi-base
 # FROM caddy:${VERSION} # Or use the standard Caddy version.
 
+ARG CADDY_IMAGE_VERSION
+ARG BUILD_DATE
+ARG GITHUB_SHA
+ARG CADDY_CROWDSEC_BOUNCER_VERSION
+ARG CADDY_DNS_INWX_VERSION
+
+LABEL org.opencontainers.image.title="caddy"
+LABEL org.opencontainers.image.description="Personal Caddy Container Image with INWX and Crowdsec modules included."
+LABEL org.opencontainers.image.url="ghcr.io/markaltmann/caddy-image/caddy:latest"
+LABEL org.opencontainers.image.source="https://github.com/markaltmann/caddy-imag"
+LABEL org.opencontainers.image.version="${CADDY_IMAGE_VERSION}"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.revision="${GITHUB_SHA}"
+LABEL org.opencontainers.image.licenses="The Unlicense"
+LABEL org.opencontainers.image.authors="Mark Altmann <mark@altmann.it>"
+LABEL org.opencontainers.image.component.caddy-crowdsec-bouncer="${CADDY_CROWDSEC_BOUNCER_VERSION}"
+LABEL org.opencontainers.image.component.caddy-dns-inwx="${CADDY_DNS_INWX_VERSION}"
+LABEL org.opencontainers.image.component.caddy-image="${CADDY_IMAGE_VERSION}"
+
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
 RUN chmod +x /usr/bin/caddy
