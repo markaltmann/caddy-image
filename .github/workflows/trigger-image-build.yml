@@ -35,6 +35,7 @@ jobs:
         id: update
         run: |
 
+          # Load existing refs.txt if it exists
           if [ -f refs.txt ]; then
             file=refs.txt
             . <(sed 's/-/_/g' "$file")
@@ -62,18 +63,19 @@ jobs:
             changed=1
           fi
 
-          echo "changed=$changed" >> $GITHUB_OUTPUT
-
           # Remove empty lines from refs.txt
           sed -i '/^$/d' $file
 
       - name: Commit and push refs.txt
-        if: steps.update.outputs.changed == '1'
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.email "bot@altmann.it"
           git config --global user.name "GitHub Actions Bot"
           git add refs.txt
-          git commit -m "Update external references"
-          git push
+          if ! git diff --cached --exit-code; then
+            git commit -m "Update external references"
+            git push
+          else
+            echo "No changes to refs.txt, skipping commit."
+          fi
