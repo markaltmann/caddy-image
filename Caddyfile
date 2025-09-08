@@ -4,6 +4,7 @@
 		username <username>
 		password <password>
 		shared_secret <shared_secret>
-		endpoint_url <endpoint_url>
+		endpoint_url <endpoint_url> # Standard is the Prod Instance
 	}
 }
+# Simple Hello World Tryout with Crowdsec and TLS to hello.altmann.it
