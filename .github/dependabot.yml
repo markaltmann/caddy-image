@@ -1,0 +1,19 @@
+# Dies ist eine grundlegende Dependabot-Konfigurationsdatei.
+# Sie muss im Verzeichnis .github/ Ihres Repositories gespeichert werden.
+# Weitere Informationen finden Sie in der Dokumentation:
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Konfiguration für die Überprüfung von GitHub Actions
+  # Dependabot sucht nach Updates für die Aktionen, die Sie in Ihren Workflows verwenden.
+  - package-ecosystem: "github-actions"
+    # Das Verzeichnis, in dem sich Ihre Workflow-Dateien (.yml) befinden
+    directory: ".github/workflows/"
+    schedule:
+      # Intervall für die Überprüfung (täglich, wöchentlich oder monatlich)
+      interval: "weekly"
+    # Fügen Sie Labels zu den von Dependabot erstellten Pull Requests hinzu
+    labels:
+      - "dependencies"
+      - "github_actions"
