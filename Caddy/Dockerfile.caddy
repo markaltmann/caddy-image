@@ -19,7 +19,7 @@ ARG CADDY_DNS_INWX_VERSION
 LABEL org.opencontainers.image.title="caddy"
 LABEL org.opencontainers.image.description="Personal Caddy Container Image with INWX and Crowdsec modules included."
 LABEL org.opencontainers.image.url="ghcr.io/markaltmann/caddy-image/caddy:latest"
-LABEL org.opencontainers.image.source="https://github.com/markaltmann/caddy-imag"
+LABEL org.opencontainers.image.source="https://github.com/markaltmann/caddy-image"
 LABEL org.opencontainers.image.version="${CADDY_IMAGE_VERSION}"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${GITHUB_SHA}"

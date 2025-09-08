@@ -15,7 +15,17 @@ The same setup includes a sensible dependabot configuration, that checks for new
 
 https://github.com/markaltmann/caddy-image/network/dependencies
 
+## Crowdsec
+
+Crowdsec is an open source and collaborative intrusion prevention system. It is designed to analyze behaviors, respond to attacks, and share signals across a crowd of users.
+
+More information can be found here: <https://crowdsec.net/>
+
 ## Caddy
+
+Caddy is a powerful, enterprise-ready, open source web server with automatic HTTPS written in Go. It is known for its ease of use and simple configuration.
+
+More information can be found here: <https://caddyserver.com/>
 
 ### Build
 
@@ -28,8 +38,8 @@ In my case I want these additional 2 ones:
 Building `caddy` via `xcaddy` is done simply via:
 ```sh
 xcaddy build \ 
-    --with github.com/caddy-dns/inwx \
-    --with github.com/hslatman/caddy-crowdsec-bouncer/crowdsec
+--with github.com/caddy-dns/inwx \ 
+--with github.com/hslatman/caddy-crowdsec-bouncer/crowdsec
 ```
 
 The build is currently being done in a Github Action, that triggers on the changes in the refs.txt (which is also being used for container labels): [![Build Multi-Arch Caddy Image](https://github.com/markaltmann/caddy-image/actions/workflows/docker-image.yml/badge.svg)](https://github.com/markaltmann/caddy-image/actions/workflows/docker-image.yml)  
@@ -54,11 +64,11 @@ To know, which caddy and plugins are being used, I added some labels to the cont
 - LABEL org.opencontainers.image.component.caddy-dns-inwx="${CADDY_DNS_INWX_VERSION}"
 - LABEL org.opencontainers.image.component.caddy-image="${CADDY_IMAGE_VERSION}"
 
-## Lab Container Architecture
+## Home Lab Architecture
 
 There are 2 compponents you will need:
-1. Using the proper container image
-2. Using a proper Caddyfile configuration
+1. Using the proper container image (usually provided by an owner) and run it as a "non-exposed" service locally. Routing will be done via local podman service and port
+2. Using a proper Caddyfile configuration (for crowdsec and caddy certificate) for the external routing
 
 ### Container Image
 
