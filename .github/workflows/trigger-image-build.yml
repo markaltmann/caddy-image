@@ -10,7 +10,7 @@ jobs:
     permissions:
       contents: write # Erforderlich zum Pushen von Änderungen
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Get latest go dependencies versions
         id: go
