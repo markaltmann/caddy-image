@@ -17,3 +17,8 @@ updates:
     labels:
       - "dependencies"
       - "github_actions"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
