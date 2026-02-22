@@ -81,6 +81,9 @@ podman pull ghcr.io/markaltmann/caddy-image/caddy:latest
 ### Caddyfile
 In the Caddyfile attached, you are finding an example with the INWX and crowdsec module.
 
+### Local environment file
+There is a template available at `Caddy/.env.example`. Copy it to `Caddy/.env` and fill in your local secrets (this file is ignored by git).
+
 Caddy can reuse also for testing simple ENV files:
 
 ```sh
