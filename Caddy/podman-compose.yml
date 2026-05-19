@@ -1,0 +1,36 @@
+services:
+  caddy:
+    build: ./Dockerfile.caddy
+    container_name: caddy
+    hostname: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    networks:
+      - caddynet
+    env_file:
+      - .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data:/data
+      - ./config:/config
+
+  whoami:
+    image: "containous/whoami"
+    container_name: "whoami"
+    hostname: "whoami"
+    networks:
+      - caddynet
+
+networks:
+  caddynet:
+    attachable: true
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: docker_caddy
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
