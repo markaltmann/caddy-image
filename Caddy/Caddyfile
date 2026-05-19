@@ -2,26 +2,21 @@
 {
     # ACME INWX DNS Provider
 	acme_dns inwx {
-		username {env.INWX_USERNAME}
-		password {env.INWX_PASSWORD}
-		#shared_secret {env.INWX_SHARED_SECRET}
-		#endpoint_url {env.INWX_ENDPOINT_URL} # Standard is the Prod Instance
+		username "{env.INWX_USERNAME}"
+		password "{env.INWX_PASSWORD}"
+		#shared_secret "{env.INWX_SHARED_SECRET}"
+		#endpoint_url "{env.INWX_ENDPOINT_URL}" # Standard is the Prod Instance
 	}
 	# Crowdsec Provider. Get the key from the console
 	crowdsec {
-		api_url {env.CROWDSEC_API_URL}
-		api_key {env.CROWDSEC_API_KEY}
+		api_url "{env.CROWDSEC_API_URL}"
+		api_key "{env.CROWDSEC_API_KEY}"
 		#ticker_interval 15s
-		#appsec_url {env.CROWDSEC_APPSEC_URL}
+		#appsec_url "{env.CROWDSEC_APPSEC_URL}"
 		#disable_streaming
 		#enable_hard_fails
 	}
 }
-# Simple Hello World Tryout with Crowdsec and TLS to hello.altmann.it
-hello.altmann.it {
-	route {
-		crowdsec
-		respond "Hello, privacy!"
-	}
 
-}
+# Import per-site configs from `sites/` directory
+import sites/*

@@ -69,6 +69,19 @@ The container entrypoint runs:
 
 So, when running locally you typically bind-mount a `Caddyfile` to `/etc/caddy/Caddyfile`.
 
+Note: For quick local testing we recommend using `podman-compose` (see `Caddy/podman-compose.yml`).
+
+Long-term run mode (note for agents):
+
+- Development / test: use `podman-compose` or `podman run` as needed to iterate quickly.
+- Production / long-run: migrate container services to systemd-managed units (Podman quadlets / systemd units). See `Caddy/BASICS.md` for migration notes. Typical workflow:
+  1. Build the image (CI or local registry).
+  2. Generate a systemd unit with `podman generate systemd --new --name <container> --files` or author a quadlet under `/etc/quadlet.d/`.
+  3. Enable and start the resulting systemd service(s) (`systemctl enable --now <unit>`).
+
+Do NOT commit secrets into the repo. Keep `.env` out of version control and use a secrets manager where possible.
+
+
 ## Caddyfile conventions and gotchas
 
 - `Caddy/Caddyfile` is an example configuration.
