@@ -1,6 +1,8 @@
 services:
   caddy:
-    build: ./
+    build:
+      context: ./
+      dockerfile: Dockerfile.caddy
     container_name: caddy
     hostname: caddy
     restart: unless-stopped
@@ -14,7 +16,7 @@ services:
       - .env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./sites:/etc/caddy
+      - ./sites:/etc/caddy/sites:ro
       - ./data:/data
       - ./config:/config
 
