@@ -74,7 +74,7 @@ Note: For quick local testing we recommend using `podman-compose` (see `Caddy/po
 Long-term run mode (note for agents):
 
 - Development / test: use `podman-compose` or `podman run` as needed to iterate quickly.
-- Production / long-run: migrate container services to systemd-managed units (Podman quadlets / systemd units). See `Caddy/BASICS.md` for migration notes. Typical workflow:
+- Production / long-run: migrate container services to systemd-managed units (Podman quadlets / systemd units). See [README.md](file:///Users/markaltmann/Git/caddy-image/README.md#long-term--production-systemd-quadlets) for migration notes. Typical workflow:
   1. Build the image (CI or local registry).
   2. Generate a systemd unit with `podman generate systemd --new --name <container> --files` or author a quadlet under `/etc/quadlet.d/`.
   3. Enable and start the resulting systemd service(s) (`systemctl enable --now <unit>`).
@@ -85,9 +85,8 @@ Do NOT commit secrets into the repo. Keep `.env` out of version control and use 
 ## Caddyfile conventions and gotchas
 
 - `Caddy/Caddyfile` is an example configuration.
-- **Secrets must not be committed.** The current file includes a literal `password` value under `acme_dns inwx`.
-  - Treat `Caddyfile` as sample-only and keep credentials in environment/secret management instead.
-- The file currently mixes Caddyfile syntax with JSON-like keys (`"api_key": "", "api_url": ""`). Caddyfile parsing is strict; prefer the official module directives/config format.
+- **Secrets must not be committed**: The configuration uses environment variables (e.g., `{$INWX_PASSWORD}`) to avoid committing secrets to version control.
+- **Syntax**: Ensure Caddyfile syntax complies with official module directives (e.g. block properties separated by spaces, no colons or quoted keys).
 
 ## Security / supply chain
 

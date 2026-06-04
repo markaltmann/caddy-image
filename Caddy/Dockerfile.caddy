@@ -32,9 +32,9 @@ COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
 # Install libcap to apply capabilities and then remove it to keep the image minimal
 # Wolfi base image uses apk.
-RUN apk add --no-cache libcap && \
+RUN apk add --no-cache libcap-utils && \
     setcap cap_net_bind_service=+ep /usr/bin/caddy && \
-    apk del libcap
+    apk del libcap-utils
 
 EXPOSE 80 443
 
