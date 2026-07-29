@@ -1,4 +1,4 @@
 # References for build. Test for changes Push
-caddy-crowdsec-bouncer=v0.13.1
+caddy-crowdsec-bouncer=v0.14.0
 caddy-dns-inwx=v0.4.1
 caddy-image=v2.11.4
