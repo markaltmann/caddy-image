@@ -1,0 +1,23 @@
+# Git and CI
+.git
+.github
+.agents
+.crush
+
+# Environment & secrets
+.env
+.env.*
+*/.env
+*/.env.*
+
+# Local compiled binaries and runtime data
+caddy
+*/caddy
+data/
+config/
+*/data/
+*/config/
+
+# Documentation & metadata
+*.md
+LICENSE

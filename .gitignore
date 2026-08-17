@@ -1,3 +1,19 @@
-# Simple Gitignore
+# Environment & secrets
 .env
+.env.*
 */.env
+*/.env.*
+
+# Compiled binaries
+/Caddy/caddy
+bin/
+
+# Local runtime data
+Caddy/data/
+Caddy/config/
+data/
+config/
+
+# OS & editor artifacts
+.DS_Store
+*.swp
