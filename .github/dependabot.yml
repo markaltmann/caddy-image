@@ -8,8 +8,8 @@ updates:
   # Konfiguration für die Überprüfung von GitHub Actions
   # Dependabot sucht nach Updates für die Aktionen, die Sie in Ihren Workflows verwenden.
   - package-ecosystem: "github-actions"
-    # Das Verzeichnis, in dem sich Ihre Workflow-Dateien (.yml) befinden
-    directory: ".github/workflows/"
+    # Das Wurzelverzeichnis des Repositories (sucht standardmäßig in .github/workflows/)
+    directory: "/"
     schedule:
       # Intervall für die Überprüfung (täglich, wöchentlich oder monatlich)
       interval: "weekly"
@@ -18,7 +18,3 @@ updates:
       - "dependencies"
       - "github_actions"
 
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: daily
