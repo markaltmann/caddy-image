@@ -3,6 +3,7 @@
 .env.*
 */.env
 */.env.*
+.agents/plugins/*/mcp_config.json
 
 # Compiled binaries
 /Caddy/caddy
