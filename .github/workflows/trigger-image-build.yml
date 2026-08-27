@@ -14,7 +14,7 @@ jobs:
       contents: write # Erforderlich zum Pushen von Änderungen
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e3f713f2d8f53843e71c69a996d56f51aa9adfb9 # v2.14.1
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
         with:
           egress-policy: audit
 
@@ -42,41 +42,31 @@ jobs:
       - name: Compare and update refs.txt if needed
         id: update
         run: |
-
-          # Load existing refs.txt if it exists
-          if [ -f refs.txt ]; then
-            file=refs.txt
-            . <(sed 's/-/_/g' "$file")
-          fi
-          changed=0
+          file="refs.txt"
+          touch "$file"
 
           # Clean up and update caddy-crowdsec-bouncer
-          sed -i '/^caddy-crowdsec-bouncer=/d' $file
+          sed -i '/^caddy-crowdsec-bouncer=/d' "$file"
           if [ -n "${{ steps.go.outputs.caddy-crowdsec-bouncer }}" ]; then
-            echo "caddy-crowdsec-bouncer=${{ steps.go.outputs.caddy-crowdsec-bouncer }}" >> $file
-            changed=1
+            echo "caddy-crowdsec-bouncer=${{ steps.go.outputs.caddy-crowdsec-bouncer }}" >> "$file"
           fi
 
           # Clean up and update caddy-dns-inwx
-          sed -i '/^caddy-dns-inwx=/d' $file
+          sed -i '/^caddy-dns-inwx=/d' "$file"
           if [ -n "${{ steps.go.outputs.caddy-dns-inwx }}" ]; then
-            echo "caddy-dns-inwx=${{ steps.go.outputs.caddy-dns-inwx }}" >> $file
-            changed=1
+            echo "caddy-dns-inwx=${{ steps.go.outputs.caddy-dns-inwx }}" >> "$file"
           fi
 
           # Clean up and update caddy-image
-          sed -i '/^caddy-image=/d' $file
+          sed -i '/^caddy-image=/d' "$file"
           if [ -n "${{ steps.image.outputs.caddy-image }}" ]; then
-            echo "caddy-image=${{ steps.image.outputs.caddy-image }}" >> $file
-            changed=1
+            echo "caddy-image=${{ steps.image.outputs.caddy-image }}" >> "$file"
           fi
 
           # Remove empty lines from refs.txt
-          sed -i '/^$/d' $file
+          sed -i '/^$/d' "$file"
 
       - name: Commit and push refs.txt
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.email "bot@altmann.it"
           git config --global user.name "GitHub Actions Bot"
