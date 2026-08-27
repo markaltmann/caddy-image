@@ -1,0 +1,26 @@
+# Docker Security Checklist
+image_security:
+  - Use official base images
+  - Scan images with Trivy/Snyk
+  - Pin image versions (no :latest)
+  - Use multi-stage builds
+  - Remove unnecessary packages
+
+runtime_security:
+  - Run as non-root user
+  - Use read-only filesystem
+  - Drop unnecessary capabilities
+  - Use security profiles (seccomp, AppArmor)
+  - Limit resources (memory, CPU)
+
+network_security:
+  - Use internal networks
+  - Don't expose unnecessary ports
+  - Use TLS for communication
+  - Implement network policies
+
+secrets_management:
+  - Use Docker secrets
+  - Never hardcode passwords
+  - Use environment variables carefully
+  - Rotate secrets regularly

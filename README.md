@@ -1,89 +1,135 @@
-# HomeLab
-Personal Caddy Container Image with INWX and Crowdsec modules included, that power various internal containers and web services.
+# HomeLab — Caddy container image
 
-## OpenSSF Scorecard
+Personal Caddy container image that bundles a couple of extra modules (INWX DNS provider and CrowdSec bouncer) and example configuration to run privacy-minded, self-hosted services.
 
-Like all good internet citizen it's important to me to have a good security posture. Therefore I run the OpenSSF Scorecard on all my public repositories. Especially on this repo, with the HomeLab setup it's important to achieve a good posture and automate as much as possible in the setup, build and deployment (more on that in the podman quadlets section).
+[![Scorecard supply-chain security](https://github.com/markaltmann/caddy-image/actions/workflows/scorecard.yml/badge.svg)](https://github.com/markaltmann/caddy-image/actions/workflows/scorecard.yml) [![Build Multi-Arch Caddy Image](https://github.com/markaltmann/caddy-image/actions/workflows/docker-image.yml/badge.svg)](https://github.com/markaltmann/caddy-image/actions/workflows/docker-image.yml)
 
-[![Scorecard supply-chain security](https://github.com/markaltmann/caddy-image/actions/workflows/scorecard.yml/badge.svg)](https://github.com/markaltmann/caddy-image/actions/workflows/scorecard.yml)
+Quick links
+- Repository image: `ghcr.io/markaltmann/caddy-image/caddy:latest`
+- Build CI: `.github/workflows/docker-image.yml`
+- Version source: `refs.txt`
 
-## Dependabot
+Table of contents
+- Overview
+- Quickstart (podman-compose)
+- Manual build & run (podman)
+- Configuration layout
+- Long-term / production (systemd quadlets)
+- Security notes & TODO
+- Troubleshooting
 
-The same setup includes a sensible dependabot configuration, that checks for new versions of the used dependencies and also security vulnerabilities.
+Overview
 
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=markaltmann/caddy-image)](https://dependabot.com) or:
+This repository produces a custom `caddy` binary (via `xcaddy`) and packages it into a container image. It is intended as the reverse-proxy / TLS edge for a homelab of self-hosted services. There is no application source code here — the product is the container build, configuration, and CI that builds and publishes the image.
 
-https://github.com/markaltmann/caddy-image/network/dependencies
+What this repo contains (high level)
+- `Caddy/Dockerfile.caddy` — multi-stage build using `xcaddy` to compile Caddy with the selected modules.
+- `Caddy/Caddyfile` — global Caddy settings (ACME via INWX, CrowdSec provider) and `import sites/*`.
+- `Caddy/sites/` — per-site small Caddyfile fragments (example site files included).
+- `Caddy/podman-compose.yml` — local dev compose definition for quick testing.
+- `Caddy/.env.tmpl` — template for required environment variables (copy to `Caddy/.env` for local testing).
+- `refs.txt` — version references used by CI to label and build the image.
 
-## Crowdsec
+Quickstart — podman-compose (fast local iteration)
 
-Crowdsec is an open source and collaborative intrusion prevention system. It is designed to analyze behaviors, respond to attacks, and share signals across a crowd of users.
-
-More information can be found here: <https://crowdsec.net/>
-
-## Caddy
-
-Caddy is a powerful, enterprise-ready, open source web server with automatic HTTPS written in Go. It is known for its ease of use and simple configuration.
-
-More information can be found here: <https://caddyserver.com/>
-
-### Build
-
-Caddy can be extended with additional modules and configurations to meet specific needs.
-In my case I want these additional 2 ones:
-
-- INWX <https://caddyserver.com/docs/modules/dns.providers.inwx>
-- Crowdsec <https://caddyserver.com/docs/modules/crowdsec>
-
-Building `caddy` via `xcaddy` is done simply via:
-```sh
-xcaddy build \ 
---with github.com/caddy-dns/inwx \ 
---with github.com/hslatman/caddy-crowdsec-bouncer/crowdsec
-```
-
-The build is currently being done in a Github Action, that triggers on the changes in the refs.txt (which is also being used for container labels): [![Build Multi-Arch Caddy Image](https://github.com/markaltmann/caddy-image/actions/workflows/docker-image.yml/badge.svg)](https://github.com/markaltmann/caddy-image/actions/workflows/docker-image.yml)  
-And the triggering is done via another workflow: [![Check External References](https://github.com/markaltmann/caddy-image/actions/workflows/trigger-image-build.yml/badge.svg)](https://github.com/markaltmann/caddy-image/actions/workflows/trigger-image-build.yml)
-
-You can find the final package here: <https://github.com/markaltmann/caddy-image/pkgs/container/caddy-image%2Fcaddy>
-
-### Container Labeling
-
-To know, which caddy and plugins are being used, I added some labels to the container image for transparency (example in Dockerfile):
-
-- LABEL org.opencontainers.image.title="caddy"
-- LABEL org.opencontainers.image.description="Personal Caddy Container Image with INWX and Crowdsec modules included."
-- LABEL org.opencontainers.image.url="ghcr.io/markaltmann/caddy-image/caddy:latest"
-- LABEL org.opencontainers.image.source="https://github.com/markaltmann/caddy-imag"
-- LABEL org.opencontainers.image.version="${CADDY_IMAGE_VERSION}"
-- LABEL org.opencontainers.image.created="${BUILD_DATE}"
-- LABEL org.opencontainers.image.revision="${GITHUB_SHA}"
-- LABEL org.opencontainers.image.licenses="The Unlicense"
-- LABEL org.opencontainers.image.authors="Mark Altmann <mark@altmann.it>"
-- LABEL org.opencontainers.image.component.caddy-crowdsec-bouncer="${CADDY_CROWDSEC_BOUNCER_VERSION}"
-- LABEL org.opencontainers.image.component.caddy-dns-inwx="${CADDY_DNS_INWX_VERSION}"
-- LABEL org.opencontainers.image.component.caddy-image="${CADDY_IMAGE_VERSION}"
-
-## Home Lab Architecture
-
-There are 2 compponents you will need:
-1. Using the proper container image (usually provided by an owner) and run it as a "non-exposed" service locally. Routing will be done via local podman service and port
-2. Using a proper Caddyfile configuration (for crowdsec and caddy certificate) for the external routing
-
-### Container Image
-
-Use the following container image path:
+1. Copy the env template and fill secrets locally (do not commit them):
 
 ```sh
-podman pull ghcr.io/markaltmann/caddy-image/caddy:latest
+cp Caddy/.env.tmpl Caddy/.env
+# edit Caddy/.env and set CROWDSEC_* and INWX_* values as needed
 ```
 
-### Caddyfile
-In the Caddyfile attached, you are finding an example with the INWX and crowdsec module.
-
-Caddy can reuse also for testing simple ENV files:
+2. From the `Caddy/` directory, start the compose stack (builds the image):
 
 ```sh
-# testing
-$ touch Caddyfile
+cd Caddy
+podman-compose up --build -d
 ```
+
+3. (Optional) For local smoke testing add host entries on your workstation:
+
+```sh
+sudo -- sh -c 'printf "127.0.0.1 hello.altmann.it whoami.altmann.it searx.altmann.it\n" >> /etc/hosts'
+```
+
+4. Verify the smoke tests:
+
+```sh
+curl -I https://hello.altmann.it
+curl -I https://whoami.altmann.it
+curl -I https://searx.altmann.it
+```
+
+Manual build & run (podman)
+
+Build the image locally:
+
+```sh
+podman build -f Caddy/Dockerfile.caddy -t caddy-custom:local Caddy
+```
+
+Run the container for quick local testing (bind mounts mirror `podman-compose`):
+
+```sh
+podman run --rm \
+  -p 80:80 -p 443:443 -p 443:443/udp \
+  --env-file Caddy/.env \
+  -v "$PWD/Caddy/Caddyfile":/etc/caddy/Caddyfile:ro \
+  -v "$PWD/Caddy/data":/data \
+  -v "$PWD/Caddy/config":/config \
+  caddy-custom:local run --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+Configuration layout
+
+- The root `Caddy/Caddyfile` contains global settings (ACME via `acme_dns inwx`, and the `crowdsec` provider) and imports `Caddy/sites/*`.
+- Add one site fragment per host under `Caddy/sites/` (examples: `hello.conf`, `whoami.conf`, `searxng.conf`).
+- CrowdSec is enabled by default (global provider + per-site `crowdsec` middleware lines in the examples). If you need to exclude a site from CrowdSec for testing you can remove the `crowdsec` line from that site's fragment.
+- TLS issuance is configured globally using the INWX DNS provider. Leave TLS implicit unless you require site-specific overrides.
+
+Environment / secrets
+
+- Use `Caddy/.env.tmpl` as the template. Copy to `Caddy/.env` and fill values locally. Do NOT commit `.env`.
+- For local testing without real DNS/TLS you can temporarily add `tls internal` to a site fragment to use Caddy's internal CA.
+
+Build & CI
+
+- `refs.txt` is the source of truth for module/image versions used by the CI workflow.
+- CI (`.github/workflows/docker-image.yml`) parses `refs.txt` and builds/pushes the multi-arch container image.
+- The `Dockerfile.caddy` adds informative labels for provenance and included module versions.
+
+Long-term / production (systemd quadlets)
+
+- For production, the recommended approach is to run containers as systemd-managed units (Podman quadlets) instead of `podman-compose`.
+- Migration outline:
+  1. Build and publish the image (CI / registry).
+  2. On the host generate a systemd unit with Podman:
+
+```sh
+podman generate systemd --new --name caddy --files
+```
+
+  3. Alternatively author a quadlet unit under `/etc/quadlet.d/` and enable it with `systemctl enable --now`.
+
+Security notes & TODO
+
+- DO NOT commit secrets. Keep `.env` local or use a secrets manager.
+- CrowdSec is used as the primary protective middleware by default for publicly available sites.
+- TODO: Evaluate adding a WAF layer (Caddy + Coraza + OWASP ModSecurity Core Rule Set) as a complement/alternative to CrowdSec — run an engineering spike to evaluate false positives and operational cost.
+
+Troubleshooting
+
+- If Caddy fails to obtain certificates, ensure INWX credentials in `Caddy/.env` are correct and that the DNS provider supports the target zones.
+- Check container logs with `podman logs <container>` and inspect files under `Caddy/config` (bind-mounted by `podman-compose.yml`).
+
+Contributing
+
+- If you change the modules built into the Caddy binary, update `Dockerfile.caddy` and `refs.txt` accordingly and ensure CI labels are updated.
+- Keep secrets out of the repo. Use `Caddy/.env.tmpl` for examples only.
+
+Useful links
+- Caddy: https://caddyserver.com/
+- CrowdSec: https://crowdsec.net/
+- INWX provider docs: https://caddyserver.com/docs/modules/dns.providers.inwx
+- caddy-crowdsec-bouncer: https://github.com/hslatman/caddy-crowdsec-bouncer
+

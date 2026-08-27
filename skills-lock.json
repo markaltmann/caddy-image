@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "caddy": {
+      "source": "muninn-huginn/caddy-skill",
+      "sourceType": "github",
+      "skillPath": "caddy/SKILL.md",
+      "computedHash": "05be37b62ba1e519775bd9ecf602c5d39196527cbd5b3c9f4aa882f90e09822d"
+    },
+    "container-security": {
+      "source": "snyk/studio-recipes",
+      "sourceType": "github",
+      "skillPath": "command_directives/synchronous_remediation/skills/container-security/SKILL.md",
+      "computedHash": "fa1dc855ca4331d4f73590f725a6c8b08e5be682af80503fbe638b52341f6462"
+    },
+    "devsecops-expert": {
+      "source": "martinholovsky/claude-skills-generator",
+      "sourceType": "github",
+      "skillPath": "skills/devsecops-expert/SKILL.md",
+      "computedHash": "0e770b2394b93cd8189a910d92edfb3a5e2b40460c8c2ddb2e13d56dc3254523"
+    },
+    "docker-security": {
+      "source": "pluginagentmarketplace/custom-plugin-docker",
+      "sourceType": "github",
+      "skillPath": "skills/docker-security/SKILL.md",
+      "computedHash": "fa0ae31cc2cc41650325a517c643a91973cb015737248cd0277e37b294cfeacf"
+    }
+  }
+}
