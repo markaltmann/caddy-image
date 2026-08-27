@@ -1,0 +1,11 @@
+# Environment & secrets
+.env
+.env.*
+
+# Local compiled binaries and runtime data
+caddy
+data/
+config/
+
+# Documentation & metadata
+*.md
