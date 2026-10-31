@@ -101,15 +101,111 @@ Build & CI
 Long-term / production (systemd quadlets)
 
 - For production, the recommended approach is to run containers as systemd-managed units (Podman quadlets) instead of `podman-compose`.
-- Migration outline:
-  1. Build and publish the image (CI / registry).
-  2. On the host generate a systemd unit with Podman:
+- Ready-to-use quadlet files live in `Caddy/quadlets/`:
+  - `caddynet.network` — the `caddynet` bridge network (172.19.0.0/16) that Caddy and all upstream services join. The bridge interface is named `caddynet0` so UFW rules can target it deterministically.
+  - `caddy.container` — the Caddy container (uses the published GHCR image, mounts config from `/etc/caddy/`).
+  - `whoami.container` — test upstream for smoke tests. Joins `caddynet` and publishes no ports; it is only reachable through the Caddy reverse proxy, so there is no way around TLS.
+  - `.env.tmpl` — template for the secrets env file.
+- Deployment on the server (as root):
 
 ```sh
-podman generate systemd --new --name caddy --files
+cp Caddy/quadlets/caddynet.network Caddy/quadlets/caddy.container Caddy/quadlets/whoami.container /etc/quadlet.d/
+cp Caddy/quadlets/.env.tmpl /etc/caddy/.env   # then fill in INWX_* and CROWDSEC_* values
+systemctl daemon-reload
+systemctl enable --now caddynet.service
+systemctl enable --now caddy.service
 ```
 
-  3. Alternatively author a quadlet unit under `/etc/quadlet.d/` and enable it with `systemctl enable --now`.
+- Notes:
+  - Quadlet naming rule: `caddynet.network` is loaded as `caddynet.service`, and is referenced as `Network=caddynet.network` inside the `.container` file — this must match `Network=<filename>` exactly, not the service name.
+  - Every upstream service that a site fragment reverse-proxies (e.g. `whoami:80`) must join the same network (`Network=caddynet.network` in its own `.container` file) for DNS name resolution to work.
+  - `Restart=always` in `[Service]` overrides the container-level `Restart=` (systemd owns the restart policy for quadlets).
+  - The Caddyfile reads variables (`{$INWX_USERNAME}` etc.) from the container environment, which comes from `EnvironmentFile=/etc/caddy/.env`.
+- CrowdSec integration (agent on host, bouncer in container):
+  - The CrowdSec agent/LAPI runs on the host by default on `127.0.0.1:8080`, which the container cannot reach. Change `api_server.listen_uri` to `0.0.0.0:8080` in `/etc/crowdsec/config.yaml` (or bind it to the bridge IP), then restrict access with UFW:
+
+```sh
+ufw allow in on caddynet0 from 172.19.0.0/16 to any port 8080 proto tcp
+```
+
+  - Register the bouncer on the host and put the key in `/etc/caddy/.env`:
+
+```sh
+cscli bouncers add caddy
+```
+
+  - Inside the container, the podman host is the bridge gateway `172.19.0.1`, so `CROWDSEC_API_URL=http://172.19.0.1:8080/`. (Alternative: `host.containers.internal`, which podman also maps to the gateway on a rootful bridge network.)
+  - Keep `enable_hard_fails` commented out while bringing this up so Caddy starts even when the LAPI isn't reachable yet; the bouncer then streams decisions every `ticker_interval` (60s by default) once connectivity works.
+- QUIC UDP buffers (Caddy serves HTTP/3 on 443/udp; the kernel defaults are too small). Add to `/etc/sysctl.conf` on the host and reboot or `sysctl -p`:
+
+```sh
+net.core.rmem_max=2500000
+net.core.wmem_max=2500000
+```
+
+### Verification checklist (fresh server, first bring-up)
+
+Run these on the host, in order. Assumes only the quadlets above are deployed and the
+CrowdSec agent is already installed on the host (from the "Crowdsec für SSH etc." work).
+
+1. Deploy and start, in dependency order:
+
+```sh
+mkdir -p /etc/caddy/sites
+cp Caddy/Caddyfile /etc/caddy/Caddyfile
+cp Caddy/sites/whoami.conf /etc/caddy/sites/   # trim to the sites you actually run
+cp Caddy/quadlets/.env.tmpl /etc/caddy/.env && vi /etc/caddy/.env
+
+systemctl daemon-reload
+systemctl enable --now caddynet.service
+systemctl enable --now whoami.service
+systemctl enable --now caddy.service
+```
+
+2. DNS at INWX: create an A record `whoami.altmann.it → <server public IP>`. Under the
+   global `acme_dns inwx` config, issuance uses the DNS-01 challenge, so TLS works
+   **without** port 80 open; but port 80/443 must be open for serving traffic
+   (`ufw allow 80/tcp && ufw allow 443/tcp && ufw allow 443/udp`).
+
+3. Config sanity check before diving into logs:
+
+```sh
+podman exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+podman exec caddy caddy list-modules | grep -E "inwx|crowdsec"   # modules built in
+```
+
+4. TLS via INWX — watch issuance in the logs and on disk:
+
+```sh
+journalctl -u caddy -f | grep -iE "acme|certificate"
+podman exec caddy ls /data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/
+```
+
+5. whoami resolution over the real path (from your workstation, not the server):
+
+```sh
+curl -I https://whoami.altmann.it   # expect HTTP 200 + whoami JSON body / headers
+```
+
+6. CrowdSec bouncer connectivity (container → host LAPI):
+
+```sh
+cscli bouncers list                  # 'caddy' row: "Last pull" must advance (~60s ticker)
+podman exec caddy caddy crowdsec ping
+podman exec caddy caddy crowdsec check <some-ip>
+```
+
+7. End-to-end ban test (proves the bouncer actually blocks). Ban your own workstation IP
+   temporarily, expect an HTTP 403, then remove the decision:
+
+```sh
+cscli decisions add --ip <your-home-ip> -d 10m
+curl -I https://whoami.altmann.it    # expect HTTP 403 Forbidden
+cscli decisions remove --ip <your-home-ip>
+```
+
+8. Optional LAPI hardening check after step 6 passes: from an outside network confirm
+   port 8080 is not reachable (`nc -zv <server-ip> 8080` should fail).
 
 Security notes & TODO
 

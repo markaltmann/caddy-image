@@ -1,0 +1,18 @@
+[Unit]
+Description=whoami Test Container for Caddy Smoke Tests
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/containous/whoami:latest
+ContainerName=whoami
+Hostname=whoami
+Restart=always
+Network=caddynet.network
+
+[Service]
+Restart=always
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target
