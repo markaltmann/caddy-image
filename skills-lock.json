@@ -13,6 +13,12 @@
       "skillPath": "command_directives/synchronous_remediation/skills/container-security/SKILL.md",
       "computedHash": "fa1dc855ca4331d4f73590f725a6c8b08e5be682af80503fbe638b52341f6462"
     },
+    "crowdsec": {
+      "source": "crowdsecurity/crowdsec-skill",
+      "sourceType": "github",
+      "skillPath": "skills/crowdsec/SKILL.md",
+      "computedHash": "a5ba8f17fc745e881857a6b3ac9b3146c01e9e3c1f0816b074182923d7024945"
+    },
     "devsecops-expert": {
       "source": "martinholovsky/claude-skills-generator",
       "sourceType": "github",
