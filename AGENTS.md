@@ -4,13 +4,17 @@ This repository builds and publishes a custom **Caddy** container image that bun
 - `github.com/caddy-dns/inwx` (INWX DNS provider)
 - `github.com/hslatman/caddy-crowdsec-bouncer/crowdsec` (CrowdSec bouncer)
 
+All other services (APIs or websites) are **not reachable directly**: they publish no ports, join the `caddynet` podman network, and are exposed only as Caddy reverse-proxy sites with automatic TLS (INWX DNS-01) and the CrowdSec bouncer at the edge. The Caddy container itself is the only one with inbound ports (80/443/443-udp).
+
 There is **no application source code** here; the “product” is the container build, config, and GitHub Actions automation.
 
 ## Repository layout
 
 - `Caddy/Dockerfile.caddy` — multi-stage build that runs `xcaddy build` to compile a custom `caddy` binary, then copies it into a Wolfi base image.
-- `Caddy/Caddyfile` — example Caddy configuration.
-- `Caddy/.env.tmpl` — env template for local configuration (exists; content not inspected here).
+- `Caddy/Caddyfile` — example Caddy configuration (global settings + `import sites/*`).
+- `Caddy/sites/` — one Caddyfile fragment per hostname.
+- `Caddy/quadlets/` — deployment artifacts for systemd quadlets: `caddy.container`, `whoami.container` (test upstream), `caddynet.network` (172.19.0.0/16 bridge, interface `caddynet0`), `.env.tmpl` (env template; fill values on the server as `/etc/caddy/.env`, never commit filled copies).
+- `Caddy/podman-compose.yml` — dev-only compose stack for quick local testing.
 - `refs.txt` — versions used for labeling/build metadata and as the change trigger for the image build workflow.
 - `.github/workflows/`
   - `docker-image.yml` — builds and pushes multi-arch image when `refs.txt` changes.
@@ -73,18 +77,19 @@ Note: For quick local testing we recommend using `podman-compose` (see `Caddy/po
 
 Long-term run mode (note for agents):
 
+- **Production / long-run:** podman quadlets are the canonical method — see the ready-to-use files in `Caddy/quadlets/` and the verification checklist in the "Long-term / production (systemd quadlets)" section of [README.md](file:///Users/markaltmann/Git/caddy-image/README.md#long-term--production-systemd-quadlets). Deployment sketch: copy the quadlet files to `/etc/quadlet.d/` and site configs to `/etc/caddy/`, fill `/etc/caddy/.env`, then `systemctl daemon-reload && systemctl enable --now caddynet.service whoami.service caddy.service` (network → upstreams → Caddy).
+- `podman generate systemd` is legacy — don't use it.
 - Development / test: use `podman-compose` or `podman run` as needed to iterate quickly.
-- Production / long-run: migrate container services to systemd-managed units (Podman quadlets / systemd units). See [README.md](file:///Users/markaltmann/Git/caddy-image/README.md#long-term--production-systemd-quadlets) for migration notes. Typical workflow:
-  1. Build the image (CI or local registry).
-  2. Generate a systemd unit with `podman generate systemd --new --name <container> --files` or author a quadlet under `/etc/quadlet.d/`.
-  3. Enable and start the resulting systemd service(s) (`systemctl enable --now <unit>`).
 
 Do NOT commit secrets into the repo. Keep `.env` out of version control and use a secrets manager where possible.
 
 
 ## Caddyfile conventions and gotchas
 
-- `Caddy/Caddyfile` is an example configuration.
+- `Caddy/Caddyfile` contains the global settings (ACME via `acme_dns inwx`, `crowdsec` provider) and imports all site fragments.
+- One fragment per host under `Caddy/sites/*.conf`, e.g. `whoami.conf` with `route { crowdsec; reverse_proxy whoami:80; }`.
+- **Upstreams are addressed by container name** (`reverse_proxy whoami:80`). This only resolves if the upstream joins `caddynet.network` in its own quadlet (`Network=caddynet.network`). Never use `localhost`/`127.0.0.1` — that is the Caddy container itself.
+- Public sites get the `crowdsec` middleware inside a `route` block (see `whoami.conf` / `hello.conf`).
 - **Secrets must not be committed**: The configuration uses environment variables (e.g., `{$INWX_PASSWORD}`) to avoid committing secrets to version control.
 - **Syntax**: Ensure Caddyfile syntax complies with official module directives (e.g. block properties separated by spaces, no colons or quoted keys).
 
@@ -95,6 +100,12 @@ Do NOT commit secrets into the repo. Keep `.env` out of version control and use 
 - Dependabot config exists at `.github/dependabot.yml`.
 
 ## Common agent tasks
+
+### Add a new service behind Caddy
+
+1. Author a quadlet `<name>.container` (join `Network=caddynet.network`, **no** `PublishPort` entry) and copy it to the server's `/etc/quadlet.d/`.
+2. Add a fragment `Caddy/sites/<name>.conf` with `route { crowdsec; reverse_proxy <name>:<port>; }`.
+3. Create an INWX A record pointing the hostname at the server IP. TLS and the bouncer come automatically from the global Caddyfile config; the site needs no port opened beyond Caddy's own 80/443.
 
 ### Update modules included in the custom Caddy build
 
