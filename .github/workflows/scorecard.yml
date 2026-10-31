@@ -34,12 +34,16 @@ jobs:
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
+<<<<<<< HEAD
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+=======
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+>>>>>>> e64663d (chore: bump all pending dependabot updates)
         with:
           egress-policy: audit
 
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
         with:
           persist-credentials: false
 
@@ -78,6 +82,10 @@ jobs:
       # Upload the results to GitHub's code scanning dashboard (optional).
       # Commenting out will disable upload of results to your repo's Code Scanning dashboard
       - name: "Upload to code-scanning"
+<<<<<<< HEAD
         uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+=======
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+>>>>>>> e64663d (chore: bump all pending dependabot updates)
         with:
           sarif_file: results.sarif
