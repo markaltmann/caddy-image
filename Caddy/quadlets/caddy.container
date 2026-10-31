@@ -1,0 +1,26 @@
+[Unit]
+Description=Caddy Reverse Proxy Container (Custom Build with INWX & CrowdSec)
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/markaltmann/caddy-image/caddy:latest
+ContainerName=caddy
+Hostname=caddy
+Restart=always
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=443:443/udp
+EnvironmentFile=/etc/caddy/.env
+Volume=/etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+Volume=/etc/caddy/sites:/etc/caddy/sites:ro
+Volume=caddy_data:/data
+Volume=caddy_config:/config
+Network=caddynet.network
+
+[Service]
+Restart=always
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target default.target

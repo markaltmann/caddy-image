@@ -1,0 +1,9 @@
+[Unit]
+Description=Caddy Network for Podman Quadlet Containers
+
+[Network]
+Driver=bridge
+Subnet=172.19.0.0/16
+Gateway=172.19.0.1
+NetworkName=caddynet
+Options=com.docker.network.bridge.name=caddynet0
