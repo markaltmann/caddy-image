@@ -49,15 +49,13 @@ podman-compose up --build -d
 3. (Optional) For local smoke testing add host entries on your workstation:
 
 ```sh
-sudo -- sh -c 'printf "127.0.0.1 hello.altmann.it whoami.altmann.it searx.altmann.it\n" >> /etc/hosts'
+sudo -- sh -c 'printf "127.0.0.1 whoami.altmann.it\n" >> /etc/hosts'
 ```
 
 4. Verify the smoke tests:
 
 ```sh
-curl -I https://hello.altmann.it
 curl -I https://whoami.altmann.it
-curl -I https://searx.altmann.it
 ```
 
 Manual build & run (podman)
